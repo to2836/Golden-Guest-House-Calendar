@@ -1,5 +1,6 @@
 asgiref==3.4.1
 Django==3.2.25
+django-environ==0.11.2
 environ==1.0
 psycopg2==2.9.8
 pytz==2024.2

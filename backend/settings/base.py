@@ -11,10 +11,15 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
-import environ
 
+import os
+from django.core.exceptions import ImproperlyConfigured
 
-env = environ.Env()
+def get_env_variable(var_name):
+    try:
+        return os.environ[var_name]
+    except KeyError:
+        raise ImproperlyConfigured(f"환경 변수 {var_name}이 설정되지 않았습니다.")
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

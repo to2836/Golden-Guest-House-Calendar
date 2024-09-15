@@ -13,3 +13,6 @@ migrate:
 
 makemigrations:
 	python3.8 manage.py makemigrations
+
+req:
+	pip freeze > backend/requirements.txt

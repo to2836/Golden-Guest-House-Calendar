@@ -3,16 +3,16 @@ clean_cache:
 	@find . -name \*.pyo -delete
 	
 runserver: clean_cache
-	python3.8 manage.py runserver 0.0.0.0:8000
+	python3 manage.py runserver
 
 superuser:
-	python3.8 manage.py createsuperuser
+	python3 manage.py createsuperuser
 
 migrate:
-	python3.8 manage.py migrate
+	python3 manage.py migrate
 
 makemigrations:
-	python3.8 manage.py makemigrations
+	python3 manage.py makemigrations
 
 req:
 	pip freeze > requirements.txt

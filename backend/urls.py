@@ -15,7 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.urls import path, re_path, include
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
+from rest_framework.decorators import api_view, permission_classes
+from django.shortcuts import render
+
+@api_view(['GET'])
+def show_calendar_page(request, *args, **kwargs):
+    return render(request, 'calendar.html')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    re_path(r'^calendar?$', show_calendar_page),
 ]

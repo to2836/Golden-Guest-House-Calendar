@@ -79,3 +79,31 @@ export const postApi = (url, data, header = {}) => {
     .post(postUrl, data, { headers })
     .then(response => response)
 }
+
+export const patchApi = (url, data, header = {}) => {
+  const csrftoken = getCookie('csrftoken')
+  const headers = {
+    ...header,
+    'X-CSRFToken': csrftoken,
+    'Authorization': `Bearer ${access}`
+  }
+  const patchUrl = origin + url;
+  return axios
+    .patch(patchUrl, data, { headers })
+    .then(response => response)
+}
+
+export const deleteApi = (url) => {
+  const csrftoken = getCookie('csrftoken')
+  const headers = {
+    'X-CSRFToken': csrftoken,
+    'Authorization': `Bearer ${access}`
+  }
+
+
+  const deleteUrl = origin + url;
+
+  return axios
+    .delete(deleteUrl, { headers })
+    .then(response => response)
+}

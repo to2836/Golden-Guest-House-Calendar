@@ -7,6 +7,7 @@ import ShowMoreModal from '../../Modal/ShowMoreModal';
 import DetailModal from '../../Modal/DetailModal';
 import AddIcon from '@mui/icons-material/Add';
 import CreateModal from '../../Modal/CreateModal';
+import DeleteConfirmModal from '../../Modal/DeleteConfirmModal';
 import { calendarEventListAPI } from '../../../api/calendar';
 import dayjs from "dayjs";
 
@@ -54,6 +55,7 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
   const [showMoreModalState, setShowMoreModalState] = useState(false);
   const [detailModalState, setDetailModalState] = useState(false);
   const [createModalState, setCreateModalState] = useState(false);
+  const [deleteConfirmModalState, setDeleteConfirmModalState] = useState(false);
   const [showMoreModalData, setShowMoreModalData] = useState(false);
   const [detailData, setDetailData] = useState(false);
   const [currentDate, setCurrentDate] = useState(`${year}-${month}`);
@@ -61,6 +63,7 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
   const [targetDate, setTargetDate] = useState(new Date());
   const [currentRange, setCurrentRange] = useState(false);
   const [init, setInit] = useState(false);
+  const [deleteData, setDeleteData] = useState(false);
 
   useEffect(() => {
     if (!init && calendarRef.current) {
@@ -70,51 +73,6 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
     }
   }, [events])
 
-
-  // // 예시 데이터 (이벤트)
-  // const [events, setEvents] = useState([
-  //   {
-  //     title: 'Hello',
-  //     start: new Date('2024-09-28'),
-  //     end: new Date('2024-10-06'),
-  //     booking_id: 'AAAA',
-  //     color: '#8E24AA'
-  //   },
-  //   {
-  //     title: 'Meeting',
-  //     start: new Date(),
-  //     end: new Date(),
-  //     booking_id: 'AAAA',
-  //     color: '#8E24AA'
-  //   },{
-  //     title: 'Meeting',
-  //     start: new Date(),
-  //     end: new Date(),
-  //     booking_id: 'AAAA',
-  //     color: '#8E24AA'
-  //   },
-  //   {
-  //     title: 'Meeting',
-  //     start: new Date(),
-  //     end: new Date(),
-  //     booking_id: 'AAAA',
-  //     color: '#8E24AA'
-  //   },{
-  //     title: 'Meeting',
-  //     start: new Date(),
-  //     end: new Date(),
-  //     booking_id: 'AAAA',
-  //     color: '#8E24AA'
-  //   },
-  //   {
-  //     title: 'Meeting',
-  //     start: new Date(),
-  //     end: new Date(),
-  //     booking_id: 'AAAA',
-  //     color: '#8E24AA'
-  //   }
-  // ]);
-
   const dayPropGetter = (date) => {
     const day = date.getDay(); // 0: 일요일, 6: 토요일
     if (day === 0) {
@@ -123,6 +81,23 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
       return { className: 'saturday' }; // 토요일은 파란색
     }
     return {}; // 다른 날은 스타일 변경 없음
+  }
+
+  function getAgentContraction(_agent) {
+    switch(_agent) {
+      case 'AGODA':
+        return '(AG)'
+      case 'EXPEDIA':
+        return '(EP)'
+      case 'TRIP_DOT_COM':
+        return '(TD)'
+      case 'AIRBNB':
+        return '(AB)'
+      case 'GOLDEN_GUEST_HOUSE':
+        return '(GH)'
+      default:
+        return ''
+    }
   }
 
   const eventPropGetter = (_event, start, end, isSelected) => {
@@ -184,6 +159,7 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
   }
   
   const handleSelectEvent = (_event) => {
+    console.log(_event)
     setDetailModalState(true)
     setDetailData(_event)
   }
@@ -230,7 +206,7 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
             ...data,
             start: new Date(data.check_in),
             end: new Date(checkOutDateObj).setDate(checkOutDateObj.getDate() - 1),
-            title: `(${data.agent[0]}) ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
+            title: `${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
             color: getRoomColor(data.room_name)
           }
         })
@@ -265,6 +241,11 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
           setDetailModalState={setDetailModalState}
           setSuccessAlert={setSuccessAlert}
           setFailAlert={setFailAlert}
+          setTargetDate={setTargetDate}
+          setEvents={setEvents}
+          setDeleteConfirmModalState={setDeleteConfirmModalState}
+          setDeleteData={setDeleteData}
+          deleteData={deleteData}
           />
         }
         {createModalState &&
@@ -276,6 +257,18 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
             setTargetDate={setTargetDate}
             calendarRef={calendarRef}
           
+          />
+        }
+        {deleteConfirmModalState &&
+          <DeleteConfirmModal
+            setDeleteConfirmModalState={setDeleteConfirmModalState}
+            setDeleteData={setDeleteData}
+            deleteData={deleteData}
+            setSuccessAlert={setSuccessAlert}
+            setFailAlert={setFailAlert}
+            setEvents={setEvents}
+            setTargetDate={setTargetDate}
+            setDetailModalState={setDetailModalState}
           />
         }
         {events &&

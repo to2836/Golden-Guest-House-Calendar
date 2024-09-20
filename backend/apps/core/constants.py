@@ -16,10 +16,12 @@ class AgentConstant:
 class BookingStatusConstant:
     RESERVED = 'RESERVED'
     CANCEL = 'CANCEL'
+    NOSHOW = 'NOSHOW'
 
     TYPE = (
-        (RESERVED, 'Reserved'),
-        (CANCEL, 'Cancel')
+        (RESERVED, '예약'),
+        (CANCEL, '취소'),
+        (NOSHOW, '노쇼')
     )
 
 class RoomNameConstant:

@@ -4,6 +4,7 @@ from dateutil.relativedelta import relativedelta
 
 
 from rest_framework.views import APIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -84,3 +85,28 @@ class CalendarEventListCreateView(APIView):
 
         return Response(status=200)
 
+
+class CalendarEventUpdateDeleteView(APIView):
+    permission_classes = (IsAuthenticated, )
+    parser_classes = (JSONParser, )
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+
+    def petch(self, request, pk, *args, **kwargs):
+        event_obj = Event.objects.get(pk=pk)
+        serializer = EventSerializer(event_obj, data=request.data, partial=True)
+        if not serializer.is_valid():
+            print(serializer.errors)
+            return Response(status=400)
+        serializer.save()
+        return Response(status=200)
+
+    def delete(self, request, pk, *args, **kwargs):
+        bulk = self.request.query_params.get('bulk')
+        event_obj = Event.objects.get(pk=pk)
+        if json.loads(bulk):
+            Event.objects.filter(booking_id=event_obj.booking_id).delete()
+        else:
+            Event.objects.filter(pk=pk).delete()
+        
+        return Response(status=200)

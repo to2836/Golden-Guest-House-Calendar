@@ -13,6 +13,20 @@
   }
 }
 
+body {
+  background-color: white;
+}
+
+.rbc-toolbar-label {
+  color: #3C4043;
+}
+
+.alert-container {
+  position: fixed;
+  bottom: 20px;
+  z-index: 100;
+}
+
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
@@ -36,3 +50,30 @@
     transform: rotate(360deg);
   }
 }
+
+
+.input {
+  @apply text-[14px] text-gray-600 ml-5 py-1 px-3 w-full h-[30px] bg-gray-100 rounded-sm focus:outline-none focus:border-b-2 focus:border-blue-500;
+}
+
+
+/* 이벤트의 높이를 변경합니다. */
+.rbc-event {
+  height: 24px; /* 원하는 높이로 설정 */
+}
+
+/* 이벤트 제목의 글씨 스타일을 변경합니다. */
+.rbc-event .rbc-event-content {
+  font-size: 13px;
+  font-weight: 500;
+  color: white;
+}
+
+.event-span-prev {
+  clip-path: polygon(6px 0%, 100% 0%, 100% 100%, 6px 100%, 0 50%);
+}
+
+.event-span-next {
+  clip-path: polygon(0 0%, 97% 0%, 100% 50%, 97% 100%, 0 100%);
+}
+

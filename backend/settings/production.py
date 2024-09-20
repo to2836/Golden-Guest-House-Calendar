@@ -15,3 +15,9 @@ DATABASES = {
     }
 }
 DATABASES['default']['ATOMIC_REQUESTS'] = True
+
+GOOGLE_CALENDAR = {
+    'CALENDAR_ID': get_env_variable('GOOGLE_CALENDAR_ID'),
+    'CLIENT_ID': get_env_variable('GOOGLE_CALENDAR_CLIENT_ID'),
+    'CLIENT_SECRET': get_env_variable('GOOGLE_CALENDAR_CLIENT_SECRET')
+}

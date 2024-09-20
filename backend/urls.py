@@ -14,7 +14,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
 from django.urls import path, re_path, include
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, permission_classes
@@ -25,6 +24,7 @@ def show_calendar_page(request, *args, **kwargs):
     return render(request, 'calendar.html')
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    re_path(r'^admin/?', admin.site.urls),
+    re_path(r'^apiv1/?', include('apiv1.urls', namespace='apiv1')),
     re_path(r'^calendar?$', show_calendar_page),
 ]

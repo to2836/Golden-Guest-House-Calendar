@@ -252,7 +252,6 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
   }
 
   const handleCopyEvent = () => {
-
     calendarEventCopyCreateAPI(event.id, {copy_num: copyNum}).then(res => {
       setSuccessAlert({visible: true, msg: '생성 되었습니다.'})
       calendarEventListAPI(`${checkIn.getFullYear()}-${checkIn.getMonth() + 1}`).then(res => {    
@@ -275,9 +274,6 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
       setFailAlert({visible: true, msg: '에러가 발생했습니다.'})
     })
   }
-
-  
- 
 
   return (
     <div className='flex-col bg-white w-[600px] h-[750px] shadow-2xl fixed z-10 left-1/2 top-[15%] max-h-calc-10% rounded-xl -translate-x-1/2'>

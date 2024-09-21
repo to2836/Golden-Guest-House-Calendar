@@ -90,7 +90,7 @@ class CalendarEventUpdateDeleteView(APIView):
     permission_classes = (IsAuthenticated, )
     parser_classes = (JSONParser, )
 
-    def petch(self, request, pk, *args, **kwargs):
+    def patch(self, request, pk, *args, **kwargs):
         event_obj = Event.objects.get(pk=pk)
         serializer = EventSerializer(event_obj, data=request.data, partial=True)
         if not serializer.is_valid():

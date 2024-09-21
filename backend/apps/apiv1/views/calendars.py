@@ -75,7 +75,6 @@ class CalendarEventListCreateView(APIView):
         check_out_obj = datetime.strptime(check_out_str, '%Y-%m-%d').date()
         request.data['check_out'] = check_out_obj
 
-
         serializer = EventSerializer(data=request.data)
         if not serializer.is_valid():
             print(serializer.errors)

@@ -131,8 +131,10 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
 
     // 특정 이벤트의 배경색을 지정하는 로직
     let backgroundColor = _event.color || '#8E24AA'; // 기본 색상
-    const isSpanningPrevMonth = moment(start).month() < targetDate.getMonth();
-    // const className = isSpanningPrevMonth ? 'event-span-prev' : '';
+
+    // check in 되어 있는 이벤트는 border line 색을 부여
+    // className += _event.check_in_status ? 'check_in' : ''
+
     
     
 
@@ -207,7 +209,7 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
             ...data,
             start: new Date(data.check_in),
             end: new Date(checkOutDateObj).setDate(checkOutDateObj.getDate() - 1),
-            title: `${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
+            title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
             color: getRoomColor(data.room_name)
           }
         })

@@ -13,6 +13,7 @@ class Event(models.Model):
     amount           = models.IntegerField(default=0)
     on_site_payment  = models.BooleanField(default=False)
     remarks          = models.TextField(blank=True)
+    check_in_status  = models.BooleanField(default=False)
     # gender           = models.CharField(max_length=255, choices=GenderConstant.TYPE, default=GenderConstant.MAN)
 
     class Meta:

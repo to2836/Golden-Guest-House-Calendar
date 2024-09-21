@@ -61,6 +61,7 @@ function CreateModal(props) {
   const [onSitePayment, setOnSitePayment] = useState(false);
   const [remarks, setRemarks] = useState('');
   const [status, setStatus] = useState({value: 'RESERVED', label: '예약'});
+  const [checkInStatus, setCheckInStatus] = useState(false);
 
   const getDateDifference = (date1, date2) => {
     // 두 날짜의 시간 차이를 밀리초 단위로 계산
@@ -145,6 +146,7 @@ function CreateModal(props) {
       status: status.value,
       amount: amount,
       on_site_payment: onSitePayment,
+      check_in_status: checkInStatus,
       remarks: remarks,
     }
     calendarEventCreateAPI(sendData).then(res => {
@@ -189,7 +191,7 @@ function CreateModal(props) {
         <div className='flex mb-7'>
           <div className={`w-[17px] h-[17px] rounded-md mt-[10px]`} style={{backgroundColor: getRoomColor(roomName)}}/>
           <div className='flex-col w-full'>
-            <p style={{height: 30}} className='text-[20px] overflow-y-scroll self-center ml-[20px] text-gray-600'>{agent?`${getAgentContraction(agent.value)}`:''} {status?status.value === 'RESERVED'?'':`[${status.label}]`:''} {onSitePayment?'(收金)':''} {checkIn && checkOut ? `${getDateDifference(checkIn[0], checkOut[0])}泊` : ''} {reservationName}</p>
+            <p style={{height: 30}} className='text-[20px] overflow-y-scroll self-center ml-[20px] text-gray-600'>{checkInStatus?'𒊹':''} {agent?`${getAgentContraction(agent.value)}`:''} {status?status.value === 'RESERVED'?'':`[${status.label}]`:''} {onSitePayment?'(收金)':''} {checkIn && checkOut ? `${getDateDifference(checkIn[0], checkOut[0])}泊` : ''} {reservationName}</p>
             {(checkIn && checkOut) &&
               <p className='text-[15px] self-center ml-[20px] text-gray-500'>
                 {`${checkIn[0].getFullYear()}년 ${checkIn[0].getMonth() + 1}월 ${checkIn[0].getDate()}일`} - {`${checkOut[0].getFullYear()}년 ${checkOut[0].getMonth() + 1}월 ${checkOut[0].getDate()}일`} ({getDateDifference(checkIn[0], checkOut[0])}泊)
@@ -285,6 +287,14 @@ function CreateModal(props) {
               type='checkbox'
               className='cursor-pointer w-[15px] h-[15px] self-center accent-[#0064FF]'
               onChange={(e) => setOnSitePayment(e.target.checked)}
+            />
+          </div>
+          <div className='flex mb-4'>
+            <p className='w-[120px] text-[#4b5563] font-semibold content-center'>체크인 여부</p>
+            <input
+              type='checkbox'
+              className='cursor-pointer w-[15px] h-[15px] self-center accent-[#0064FF]'
+              onChange={(e) => setCheckInStatus(e.target.checked)}
             />
           </div>
           <div className='flex mb-4'>

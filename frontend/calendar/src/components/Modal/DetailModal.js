@@ -54,7 +54,6 @@ const statusOptions = [
 
 function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert, setTargetDate, setEvents, setDeleteConfirmModalState, setDeleteData, deleteData }) {
 
-  const [checkInState, setCheckInState] = useState(false);
   const [editState, setEditState] = useState(false);
   const [status, setStatus] = useState({value: event.status, label: event.status_display_name});
   const [reservationName, setReservationName] = useState(event.reservation_name);
@@ -62,6 +61,7 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
   const [amount, setAmount] = useState(event.amount);
   const [roomName, setRoomName] = useState({value: event.room_name, label: event.room_display_name});
   const [agent, setAgent] = useState({value: event.agent, label: event.agent_display_name});
+  const [checkInStatus, setCheckInStatus] = useState(event.check_in_status);
   const [checkIn, setCheckIn] = useState(new Date(event.check_in));
   const [checkOut, setCheckOut] = useState(new Date(event.check_out));
   const [onSitePayment, setOnSitePayment] = useState(event.on_site_payment);
@@ -227,6 +227,7 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
       status: status.value,
       amount: amount,
       on_site_payment: onSitePayment,
+      check_in_status: checkInStatus,
       remarks: remarks,
     }
     calendarEventUpdateAPI(event.id, sendData).then(res => {
@@ -240,7 +241,7 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
               ...data,
               start: new Date(data.check_in),
               end: new Date(checkOutDateObj).setDate(checkOutDateObj.getDate() - 1),
-              title: `${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
+              title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
               color: getRoomColor(data.room_name)
             }
           })
@@ -263,7 +264,7 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
               ...data,
               start: new Date(data.check_in),
               end: new Date(checkOutDateObj).setDate(checkOutDateObj.getDate() - 1),
-              title: `${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
+              title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
               color: getRoomColor(data.room_name)
             }
           })
@@ -355,7 +356,7 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
           <>
             <div className={`w-[17px] h-[17px] rounded-md mt-[10px]`} style={{backgroundColor: getRoomColor(roomName)}}/>
             <div className='flex-col w-full'>
-              <p style={{height: 30}} className='text-[20px] overflow-y-scroll self-center ml-[20px] text-gray-600'>{agent?`${getAgentContraction(agent.value)}`:''} {status?status.value === 'RESERVED'?'':`[${status.label}]`:''} {onSitePayment?'(收金)':''} {checkIn && checkOut ? `${getDateDifference(checkIn, checkOut)}泊` : ''} {reservationName}</p>
+              <p style={{height: 30}} className='text-[20px] overflow-y-scroll self-center ml-[20px] text-gray-600'>{checkInStatus?'𒊹':''} {agent?`${getAgentContraction(agent.value)}`:''} {status?status.value === 'RESERVED'?'':`[${status.label}]`:''} {onSitePayment?'(收金)':''} {checkIn && checkOut ? `${getDateDifference(checkIn, checkOut)}泊` : ''} {reservationName}</p>
               {(checkIn && checkOut) &&
                 <p className='text-[15px] self-center ml-[20px] text-gray-500'>
                   {`${checkIn.getFullYear()}년 ${checkIn.getMonth() + 1}월 ${checkIn.getDate()}일`} - {`${checkOut.getFullYear()}년 ${checkOut.getMonth() + 1}월 ${checkOut.getDate()}일`} ({getDateDifference(checkIn, checkOut)}泊)
@@ -367,7 +368,7 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
           <>
             <div className='w-[17px] h-[17px] rounded-md mt-[10px]' style={{backgroundColor: getRoomColor(event.room_name)}}/>
             <div className='flex-col'>
-              <p className='text-[20px] self-center ml-[20px] text-gray-600'>{getAgentContraction(event.agent)} {getStatusLabel(event.status)} {event.on_site_payment?'(收金)':''} {`${getDateDifference(new Date(event.check_in), new Date(event.check_out))}泊`} {event.reservation_name}</p>
+              <p className='text-[20px] self-center ml-[20px] text-gray-600'>{event.check_in_status?'𒊹':''} {getAgentContraction(event.agent)} {getStatusLabel(event.status)} {event.on_site_payment?'(收金)':''} {`${getDateDifference(new Date(event.check_in), new Date(event.check_out))}泊`} {event.reservation_name}</p>
               <p className='text-[15px] self-center ml-[20px] text-gray-500'>{`${new Date(event.check_in).getFullYear()}년 ${new Date(event.check_in).getMonth() + 1}월 ${new Date(event.check_in).getDate()}일`} - {`${new Date(event.check_out).getFullYear()}년 ${new Date(event.check_out).getMonth() + 1}월 ${new Date(event.check_out).getDate()}일`} ({getDateDifference(new Date(event.check_in), new Date(event.check_out))}泊)</p>
             </div>
           </>
@@ -454,6 +455,15 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
               />
             </div>
             <div className='flex mb-4'>
+              <p className='w-[120px] text-[#4b5563] font-semibold content-center'>체크인 여부</p>
+              <input
+                type='checkbox'
+                className='cursor-pointer w-[15px] h-[15px] self-center accent-[#0064FF]'
+                onChange={(e) => setCheckInStatus(e.target.checked)}
+                checked={checkInStatus}
+              />
+            </div>
+            <div className='flex mb-4'>
               <p className='w-[120px] text-[#4b5563] font-semibold content-center'>비고</p>
               <textarea className='input' onChange={(e) => setRemarks(e.target.value)} value={remarks}/>
             </div>
@@ -495,6 +505,10 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
             <div className='flex mb-4'>
               <p className='w-[120px] text-[#4b5563] font-semibold content-center'>현장 수금</p>
               <p className='text-[#4b5563]'>{event.on_site_payment?<CheckCircleOutlineIcon className='text-green-500'/>:<HighlightOffIcon className='text-red-500'/>}</p>
+            </div>
+            <div className='flex mb-4'>
+              <p className='w-[120px] text-[#4b5563] font-semibold content-center'>체크인 여부</p>
+              <p className='text-[#4b5563]'>{event.check_in_status?<CheckCircleOutlineIcon className='text-green-500'/>:<HighlightOffIcon className='text-red-500'/>}</p>
             </div>
             <div className='flex mb-4'>
               <p className='w-[150px] text-[#4b5563] font-semibold content-center'>비고</p>

@@ -16,7 +16,7 @@ function Header() {
   }
 
   return (
-      <div className="flex justify-between w-full h-[60px] shadow-xl bg-white px-5">
+      <div className="flex justify-between w-full h-[60px] shadow-lg bg-white px-5">
         <div className="flex">
           <div className="flex">
             <LanguageIcon className="self-center mr-1 text-blue-400"/>

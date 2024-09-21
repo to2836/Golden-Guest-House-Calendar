@@ -25,6 +25,12 @@ export const calendarEventDeleteAPI = async (pk, data) => {
     return result;
 }
 
+export const calendarEventCopyCreateAPI = async (pk, data) => {
+    const url = `/apiv1/calendars/events/${pk}/copy`;
+    const result = await postApi(url, data);
+    return result;
+}
+
 
 
 

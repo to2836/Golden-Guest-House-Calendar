@@ -74,7 +74,7 @@ const DeleteConfirmModal = ({ setDeleteConfirmModalState, setDetailModalState, s
       })
       
     }).catch(err => {
-      setFailAlert({visible: true, msg: '에러가 발생했습니다!!!'})
+      setFailAlert({visible: true, msg: '에러가 발생했습니다.'})
       
     })
   }

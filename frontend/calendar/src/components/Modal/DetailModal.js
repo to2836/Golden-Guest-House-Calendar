@@ -10,11 +10,14 @@ import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import EditNoteOutlinedIcon from '@mui/icons-material/EditNoteOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
+import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
+import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
 import Select from 'react-select';
 import Flatpickr from 'react-flatpickr';
 import 'flatpickr/dist/themes/light.css';
 import { Korean } from 'flatpickr/dist/l10n/ko.js';
-import { calendarEventListAPI, calendarEventUpdateAPI } from '../../api/calendar';
+import { calendarEventListAPI, calendarEventUpdateAPI, calendarEventCopyCreateAPI } from '../../api/calendar';
 
 const roomOptions = [
   {value: 'NAGASAKI', label: '長崎'},
@@ -63,6 +66,26 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
   const [checkOut, setCheckOut] = useState(new Date(event.check_out));
   const [onSitePayment, setOnSitePayment] = useState(event.on_site_payment);
   const [remarks, setRemarks] = useState(event.remarks);
+
+  const [showDeleteOptions, setShowDeleteOptions] = useState(false)
+  const [showCopyEventModal, setShowCopyEventModal] = useState(false)
+  const [copyNum, setCopyNum] = useState(1)
+
+  const minusCopyNum = () => {
+    if (copyNum === 1) {
+      setFailAlert({visible: true, msg: '취소 1 이상 지정해야 합니다.'})
+    } else {
+      setCopyNum(copyNum - 1)
+    }
+  }
+
+  const plusCopyNum = () => {
+    if (copyNum === 100) {
+      setFailAlert({visible: true, msg: '취소 100 이하 지정해야 합니다.'})
+    } else {
+      setCopyNum(copyNum + 1)
+    }
+  }
   
 
   // useEffect(() => {
@@ -228,16 +251,33 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
     })
   }
 
-  const [showDeleteOptions, setShowDeleteOptions] = useState(false)
-  const handleMouseEnter = () => {
-    setShowDeleteOptions(true)
-    
+  const handleCopyEvent = () => {
 
+    calendarEventCopyCreateAPI(event.id, {copy_num: copyNum}).then(res => {
+      setSuccessAlert({visible: true, msg: '생성 되었습니다.'})
+      calendarEventListAPI(`${checkIn.getFullYear()}-${checkIn.getMonth() + 1}`).then(res => {    
+        setTargetDate(new Date(checkIn.getFullYear(), checkIn.getMonth()))
+        setEvents(
+          res.map(data => {
+            const checkOutDateObj = new Date(data.check_out)
+            return {
+              ...data,
+              start: new Date(data.check_in),
+              end: new Date(checkOutDateObj).setDate(checkOutDateObj.getDate() - 1),
+              title: `${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
+              color: getRoomColor(data.room_name)
+            }
+          })
+        )
+        setDetailModalState(false)
+      })
+    }).catch(err => {
+      setFailAlert({visible: true, msg: '에러가 발생했습니다.'})
+    })
   }
-  const handleMouseLeave = () => {
-    setShowDeleteOptions(false)
 
-  }
+  
+ 
 
   return (
     <div className='flex-col bg-white w-[600px] h-[750px] shadow-2xl fixed z-10 left-1/2 top-[15%] max-h-calc-10% rounded-xl -translate-x-1/2'>
@@ -251,11 +291,36 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
               className='text-gray-700 mr-11 cursor-pointer hover:text-gray-400'
               onClick={() => setEditState(true)}
             />
+            <GroupAddOutlinedIcon 
+              className={`text-gray-700 mr-11 cursor-pointer ${showCopyEventModal?'text-gray-400':'text-gray-700'}`}
+              onClick={() => setShowCopyEventModal(!showCopyEventModal)}
+            />
+            {showCopyEventModal && 
+            <div className='delete-options absolute flex-col justify-between w-[200px] z-[400] border border-gray-100 border-solid rounded-md right-[80px] mt-[30px] bg-white shadow-md p-5'>
+              
+              <div className='flex justify-between'>
+                <RemoveCircleOutlineOutlinedIcon
+                  className='text-red-500 hover:text-red-300 cursor-pointer'
+                  onClick={minusCopyNum}
+                />
+                <p className='text-gray-800 content-center'>{copyNum}</p>
+                <AddCircleOutlineOutlinedIcon 
+                  className='text-blue-500  hover:text-blue-300 cursor-pointer'
+                  onClick={plusCopyNum}
+                />
+              </div>
+              <button
+                className='w-full h-[30px] bg-[#0064FF] text-[14px] font-[900] text-white rounded-md hover:bg-blue-300 mt-4'
+                onClick={handleCopyEvent}
+              >
+                <span className='px-1'>생성</span>
+              </button>
+            </div>
+            }
             <div className='flex-col'>
               <DeleteOutlineOutlinedIcon
                 className={` cursor-pointer hover:text-gray-400 ${showDeleteOptions?'text-gray-400':'text-gray-700'} delete-options`}
                 onClick={() => setShowDeleteOptions(!showDeleteOptions)}
-             
               />
               {showDeleteOptions &&
                 <div className='delete-options absolute flex-col w-[200px] z-[400] border border-gray-100 border-solid rounded-md right-[20px] mt-[5px] bg-white shadow-md p-5'>

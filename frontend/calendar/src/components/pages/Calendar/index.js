@@ -73,6 +73,7 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
     }
   }, [events])
 
+
   const dayPropGetter = (date) => {
     const day = date.getDay(); // 0: 일요일, 6: 토요일
     if (day === 0) {

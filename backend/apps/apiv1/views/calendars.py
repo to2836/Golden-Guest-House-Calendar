@@ -79,7 +79,7 @@ class CalendarEventListCreateView(APIView):
         serializer = EventSerializer(data=request.data)
         if not serializer.is_valid():
             print(serializer.errors)
-            return Response(status=400)
+            return Response(serializer.errors, status=400)
         serializer.save()
 
 
@@ -89,15 +89,13 @@ class CalendarEventListCreateView(APIView):
 class CalendarEventUpdateDeleteView(APIView):
     permission_classes = (IsAuthenticated, )
     parser_classes = (JSONParser, )
-    queryset = Event.objects.all()
-    serializer_class = EventSerializer
 
     def petch(self, request, pk, *args, **kwargs):
         event_obj = Event.objects.get(pk=pk)
         serializer = EventSerializer(event_obj, data=request.data, partial=True)
         if not serializer.is_valid():
             print(serializer.errors)
-            return Response(status=400)
+            return Response(serializer.errors, status=400)
         serializer.save()
         return Response(status=200)
 
@@ -109,4 +107,26 @@ class CalendarEventUpdateDeleteView(APIView):
         else:
             Event.objects.filter(pk=pk).delete()
         
+        return Response(status=200)
+
+
+class CalendarEventUCopyCreateView(APIView):
+    permission_classes = (IsAuthenticated, )
+    parser_classes = (JSONParser, )
+
+    def post(self, request, pk, *args, **kwargs):
+        copy_num = request.data['copy_num']
+        event_obj = Event.objects.get(pk=pk)
+        event_data_list = []
+
+        for _ in range(0, int(copy_num)):
+            event_data_list.append(EventSerializer(event_obj).data)
+        
+        
+        serializer = EventSerializer(data=event_data_list, many=True)
+        if not serializer.is_valid():
+            print(serializer.errors)
+            return Response(serializer.errors, status=400)
+        
+        serializer.save()
         return Response(status=200)

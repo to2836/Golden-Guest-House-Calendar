@@ -5,9 +5,7 @@ function ShowMoreModal(props) {
   const [events, setEvents] = useState(false);
 
   useEffect(() => {
-    console.log('!!!', props.events)
     setEvents(props.events)
-
   }, [])
 
   

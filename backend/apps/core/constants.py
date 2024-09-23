@@ -17,11 +17,13 @@ class BookingStatusConstant:
     RESERVED = 'RESERVED'
     CANCEL = 'CANCEL'
     NOSHOW = 'NOSHOW'
+    MODIFIED = 'MODIFIED'
 
     TYPE = (
         (RESERVED, '예약'),
         (CANCEL, '취소'),
-        (NOSHOW, '노쇼')
+        (NOSHOW, '노쇼'),
+        (MODIFIED, '변경')
     )
 
 class RoomNameConstant:

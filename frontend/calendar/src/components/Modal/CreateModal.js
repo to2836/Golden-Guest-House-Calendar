@@ -1,16 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import Close from '../svg/Close';
-import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
-import ApartmentOutlinedIcon from '@mui/icons-material/ApartmentOutlined';
-import CurrencyYenOutlinedIcon from '@mui/icons-material/CurrencyYenOutlined';
-import PermIdentityOutlinedIcon from '@mui/icons-material/PermIdentityOutlined';
-import SensorDoorOutlinedIcon from '@mui/icons-material/SensorDoorOutlined';
 import Select from 'react-select';
-import selectStyle from '../../styles/SelectStyle';
 import Flatpickr from 'react-flatpickr';
 import 'flatpickr/dist/themes/light.css';// 원하는 테마를 선택할 수 있습니다
 import { Korean } from 'flatpickr/dist/l10n/ko.js'; // 한국어 로케일을 가져옵니다
-import { calendarEventCreateAPI, calendarEventListAPI } from '../../api/calendar';
+import { calendarEventCreateAPI, calendarEventListAPI, overBookingListAPI } from '../../api/calendar';
 
 const roomOptions = [
   {value: 'NAGASAKI', label: '長崎'},
@@ -43,6 +37,7 @@ const statusOptions = [
   {value: 'RESERVED', label: '예약'},
   {value: 'CANCEL', label: '취소'},
   {value: 'NOSHOW', label: '노쇼'},
+  {value: 'MODIFIED', label: '변경'},
 ]
 
 
@@ -78,17 +73,15 @@ function CreateModal(props) {
       case 'KUMAMOTO':
         return '#039BE5' // 파란색
       case 'FUKUOKA':
-        return '#E67C73' // 핑크
+        return '#616161' // 검정
       case 'OOITA':
         return '#F6BF26' // 노란색
       case 'SEOUL':
-        return '#D50000' // 빨간색
+        return '#EF6C00' // 주황색
       case 'KAGOSHIMA':
         return '#D50000' // 빨간색
       case 'MIYAZAKI':
-        return '#D50000' // 빨간색
-      default:
-        return 'white'
+        return '#7CB342' // 연두
     }
   }
   const getBedNumber = (_bedNumber) => {
@@ -151,6 +144,9 @@ function CreateModal(props) {
     }
     calendarEventCreateAPI(sendData).then(res => {
       props.setSuccessAlert({visible: true, msg: '저장 되었습니다.'})
+      overBookingListAPI().then(res => {
+        props.setOverBookingData(res)
+      })
       calendarEventListAPI(`${checkIn[0].getFullYear()}-${checkIn[0].getMonth() + 1}`).then(res => {    
         console.log('res', res)
         props.setEvents(
@@ -160,7 +156,7 @@ function CreateModal(props) {
               ...data,
               start: new Date(data.check_in),
               end: new Date(checkOutDateObj).setDate(checkOutDateObj.getDate() - 1),
-              title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
+              title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':data.status === 'NOSHOW'?'[노쇼]':'[변경]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
               color: getRoomColor(data.room_name)
             }
           })

@@ -4,7 +4,6 @@ from dateutil.relativedelta import relativedelta
 
 
 from rest_framework.views import APIView
-from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -19,6 +18,7 @@ from django.conf import settings
 from httplib2 import Credentials
 from calendars.serializers import EventSerializer
 from calendars.models import Event
+from core.constants import BookingStatusConstant
 
 
 SCOPES = [
@@ -90,12 +90,27 @@ class CalendarEventUpdateDeleteView(APIView):
     parser_classes = (JSONParser, )
 
     def patch(self, request, pk, *args, **kwargs):
-        event_obj = Event.objects.get(pk=pk)
-        serializer = EventSerializer(event_obj, data=request.data, partial=True)
-        if not serializer.is_valid():
-            print(serializer.errors)
-            return Response(serializer.errors, status=400)
-        serializer.save()
+        bulk = request.data.pop('bulk')
+
+        if bulk:
+            event_objs = Event.objects.filter(booking_id=request.data['booking_id'])
+            # print(f'request.data : {request.data}')
+
+            for event_obj in event_objs:
+                serializer = EventSerializer(event_obj, data=request.data, partial=True)
+                if not serializer.is_valid():
+                    print(serializer.errors)
+                    return Response(serializer.errors, status=400)
+                serializer.save()
+            
+        else:
+            event_obj = Event.objects.get(pk=pk)
+            serializer = EventSerializer(event_obj, data=request.data, partial=True)
+            if not serializer.is_valid():
+                print(serializer.errors)
+                return Response(serializer.errors, status=400)
+            serializer.save()
+        
         return Response(status=200)
 
     def delete(self, request, pk, *args, **kwargs):
@@ -146,21 +161,23 @@ class OverBookingListView(APIView):
         delta = (latest_date - today).days
         
         # 날짜 리스트에 모든 날짜 추가
+        over_booking_cnt = 0
+        warning_cnt = 0
         for i in range(delta):  # +1은 끝날짜 포함을 위함
             day = today + timedelta(days=i)
-            count = Event.objects.filter(check_in__lte=day, check_out__gt=day).count()
+            count = Event.objects.filter(check_in__lte=day, check_out__gt=day, status=BookingStatusConstant.RESERVED).count()
             if count >= 27:
+                if (27 <= count and count <= 29):
+                    _type = 'WARNING'
+                    warning_cnt += 1
+                else:
+                    _type = 'OVER_BOOKING'
+                    over_booking_cnt += 1
+                
                 date_list.append({
                     'count': count,
-                    'type': 'WARNING' if (27 <= count and count <= 29) else 'OVER_BOOKING',
+                    'type': _type,
                     'date': day
                 })
         
-        return Response(date_list, status=200)
-
-        
-
-        
-       
-        
-        # Event.objects.filter(check_in__lte=date, check_out__gt=date).count()
+        return Response({'data': date_list, 'over_booking_cnt':over_booking_cnt, 'warning_cnt': warning_cnt}, status=200)

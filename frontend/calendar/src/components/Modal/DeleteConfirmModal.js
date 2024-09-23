@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import Close from '../svg/Close';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
+import HelpIcon from '@mui/icons-material/Help';
 import ErrorOutlinedIcon from '@mui/icons-material/ErrorOutlined';
-import { calendarEventListAPI, calendarEventDeleteAPI } from '../../api/calendar';
+import { calendarEventListAPI, calendarEventDeleteAPI, overBookingListAPI } from '../../api/calendar';
  
-const DeleteConfirmModal = ({ setDeleteConfirmModalState, setDetailModalState, setShowMoreModalState, deleteData, setSuccessAlert, setFailAlert, setEvents, calendarRef }) => {
+const DeleteConfirmModal = ({ setDeleteConfirmModalState, setDetailModalState, setShowMoreModalState, deleteData, setSuccessAlert, setFailAlert, setEvents, calendarRef, setOverBookingData }) => {
   
   function getAgentContraction(_agent) {
     switch(_agent) {
@@ -30,15 +31,15 @@ const DeleteConfirmModal = ({ setDeleteConfirmModalState, setDetailModalState, s
       case 'KUMAMOTO':
         return '#039BE5' // 파란색
       case 'FUKUOKA':
-        return '#E67C73' // 핑크
+        return '#616161' // 핑크
       case 'OOITA':
         return '#F6BF26' // 노란색
       case 'SEOUL':
-        return '#D50000' // 빨간색
+        return '#EF6C00' // 빨간색
       case 'KAGOSHIMA':
         return '#D50000' // 빨간색
       case 'MIYAZAKI':
-        return '#D50000' // 빨간색
+        return '#7CB342' // 빨간색
       default:
         return 'white'
     }
@@ -55,6 +56,9 @@ const DeleteConfirmModal = ({ setDeleteConfirmModalState, setDetailModalState, s
   const handleDelete = () => {
     calendarEventDeleteAPI(deleteData.pk, deleteData).then(res => {
       setSuccessAlert({visible: true, msg: '삭제 되었습니다.'})
+      overBookingListAPI().then(res => {
+        setOverBookingData(res)
+      })
       calendarEventListAPI(`${deleteData.checkIn.getFullYear()}-${deleteData.checkIn.getMonth() + 1}`).then(res => {    
         setEvents(
           res.map(data => {
@@ -63,7 +67,7 @@ const DeleteConfirmModal = ({ setDeleteConfirmModalState, setDetailModalState, s
               ...data,
               start: new Date(data.check_in),
               end: new Date(checkOutDateObj).setDate(checkOutDateObj.getDate() - 1),
-              title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
+              title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':data.status === 'NOSHOW'?'[노쇼]':'[변경]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
               color: getRoomColor(data.room_name)
             }
           })
@@ -95,7 +99,7 @@ const DeleteConfirmModal = ({ setDeleteConfirmModalState, setDetailModalState, s
       </div>
       <div className='flex justify-center'>
         <div className='flex-col text-center'>
-          <ErrorOutlinedIcon
+          <HelpIcon
             className='text-red-600'
             style={{fontSize: 100}}
           />

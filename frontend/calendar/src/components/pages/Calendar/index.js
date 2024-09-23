@@ -8,8 +8,8 @@ import DetailModal from '../../Modal/DetailModal';
 import AddIcon from '@mui/icons-material/Add';
 import CreateModal from '../../Modal/CreateModal';
 import DeleteConfirmModal from '../../Modal/DeleteConfirmModal';
-import { calendarEventListAPI, overBookingListAPI } from '../../../api/calendar';
-import dayjs from "dayjs";
+import { calendarEventListAPI } from '../../../api/calendar';
+import OverBookingSideBar from '../../SideBar/OverBookingSideBar';
 
 // moment.js를 사용한 localizer 설정
 moment.locale('ko');
@@ -36,21 +36,19 @@ const getRoomColor = (_roomName) => {
     case 'KUMAMOTO':
       return '#039BE5' // 파란색
     case 'FUKUOKA':
-      return '#E67C73' // 핑크
+      return '#616161' // 검정
     case 'OOITA':
       return '#F6BF26' // 노란색
     case 'SEOUL':
-      return '#D50000' // 빨간색
+      return '#EF6C00' // 주황색
     case 'KAGOSHIMA':
       return '#D50000' // 빨간색
     case 'MIYAZAKI':
-      return '#D50000' // 빨간색
-    default:
-      return 'white'
+      return '#7CB342' // 연두
   }
 }
 
-const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
+const MyCalendar = ({setSuccessAlert, setFailAlert, overBookingData, setOverBookingData, setOverBookingSideBarState, overBookingSideBarState}) => {
   const calendarRef = useRef(null);
   const [showMoreModalState, setShowMoreModalState] = useState(false);
   const [detailModalState, setDetailModalState] = useState(false);
@@ -64,17 +62,7 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
   const [currentRange, setCurrentRange] = useState(false);
   const [init, setInit] = useState(false);
   const [deleteData, setDeleteData] = useState(false);
-  const [overBookingData, setOverBookingData] = useState(false);
 
-  useEffect(() => {
-    overBookingListAPI().then(res => {
-      console.log('res', res)
-      setOverBookingData(res)
-    }).catch(err => {
-      console.log(err)
-    })
-
-  },[])
 
   useEffect(() => {
     if (!init && calendarRef.current) {
@@ -119,7 +107,7 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
     const targetStartDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1)
     const targetEndDate = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0)
 
-    let className = ''
+    let className = 'event-hover '
 
     // 왼쪽 : event-span-prev
     const eventStartDate = new Date(moment(start).year(), moment(start).month(), moment(start).date())
@@ -191,7 +179,7 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
       );
     }
    
-    let findData = overBookingData.find(data => new Date(data.date).getFullYear() === props.date.getFullYear() && new Date(data.date).getMonth() === props.date.getMonth() && new Date(data.date).getDate() === props.date.getDate())
+    let findData = overBookingData.data.find(data => new Date(data.date).getFullYear() === props.date.getFullYear() && new Date(data.date).getMonth() === props.date.getMonth() && new Date(data.date).getDate() === props.date.getDate())
     if (findData){
       let style = ''
       if (findData.type === 'WARNING') {
@@ -249,7 +237,7 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
             ...data,
             start: new Date(data.check_in),
             end: new Date(new Date(checkOutDateObj).setDate(checkOutDateObj.getDate() - 1)),
-            title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
+            title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':data.status === 'NOSHOW'?'[노쇼]':'[변경]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
             color: getRoomColor(data.room_name)
           }
         })
@@ -257,101 +245,110 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
     })
   }
   }
-
-
   return (
-    <div className='flex-col'>
-      <div className='flex mt-10 justify-end px-12'>
-        <button
-          className='w-[100px] h-[40px] text-white text-[14px] font-[900] bg-[#0064FF] rounded-md hover:bg-blue-500'
-          onClick={() => setCreateModalState(true)}
-        >
-          <AddIcon style={{ width: 17 }} />
-          <span className='px-1'>만들기</span>
-        </button>
-      </div>
-      <div className='px-[50px]'>
-        {showMoreModalState &&
-          <ShowMoreModal
-            showMoreModalData={showMoreModalData}
-            setShowMoreModalState={setShowMoreModalState}
-            setSuccessAlert={setSuccessAlert}
-            setFailAlert={setFailAlert}
-            setDetailData={setDetailData}
-            setDetailModalState={setDetailModalState}
-          />
-        }
-        {detailModalState && 
-          <DetailModal
-          event={detailData}
-          setDetailModalState={setDetailModalState}
-          setSuccessAlert={setSuccessAlert}
-          setFailAlert={setFailAlert}
-          setTargetDate={setTargetDate}
-          setEvents={setEvents}
-          setDeleteConfirmModalState={setDeleteConfirmModalState}
-          setDeleteData={setDeleteData}
-          deleteData={deleteData}
-          setCurrentRange={setCurrentRange}
-          calendarRef={calendarRef}
-          setShowMoreModalState={setShowMoreModalState}
-          />
-        }
-        {createModalState &&
-          <CreateModal
-            setCreateModalState={setCreateModalState}
-            setSuccessAlert={setSuccessAlert}
-            setFailAlert={setFailAlert}
-            setEvents={setEvents}
-            setTargetDate={setTargetDate}
-            calendarRef={calendarRef}
-          
-          />
-        }
-        {deleteConfirmModalState &&
-          <DeleteConfirmModal
-            calendarRef={calendarRef}
-            setDeleteConfirmModalState={setDeleteConfirmModalState}
-            setDeleteData={setDeleteData}
-            deleteData={deleteData}
-            setSuccessAlert={setSuccessAlert}
-            setFailAlert={setFailAlert}
-            setEvents={setEvents}
-            setTargetDate={setTargetDate}
-            setDetailModalState={setDetailModalState}
-            setShowMoreModalState={setShowMoreModalState}
-          />
-        }
-        {events &&
-        <Calendar
-          ref={calendarRef}
-          // defaultDate={targetDate}
-          date={targetDate}
-          onNavigate={date => {
-            setTargetDate(date);
-          }}
-          localizer={localizer}
-          events={events}
-          onEventDrop={moveEvent}
-          // onEventResize={resizeEvent}
-          views={['month', 'day']}
-          view={'month'}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ width: '100%', height: '820px' }}
-          dayPropGetter={dayPropGetter}
-          eventPropGetter={eventPropGetter}
-          onShowMore={handleShowMore}
-          onSelectEvent={handleSelectEvent}
-          onRangeChange={handleRangeChange}
-          components={{
-            month: {
-              header: CustomHeader,
-              dateHeader: CustomDateHeader
-            }
-          }}
-        />
-        }
+    <div className='flex flex-1 relative h-full'>
+      <OverBookingSideBar
+        overBookingData={overBookingData}
+        setOverBookingSideBarState={setOverBookingSideBarState}
+        overBookingSideBarState={overBookingSideBarState}
+        calendarRef={calendarRef}
+      />
+      <div className='flex-col h-full flex-1'>
+        <div className='flex justify-end px-12  mt-10'>
+          <button
+            className='w-[100px] h-[40px] text-white text-[14px] font-[900] bg-[#0064FF] rounded-md hover:bg-blue-500'
+            onClick={() => setCreateModalState(true)}
+          >
+            <AddIcon style={{ width: 17 }} />
+            <span className='px-1'>만들기</span>
+          </button>
+        </div>
+        <div className='px-[50px]'>
+          {showMoreModalState &&
+            <ShowMoreModal
+              showMoreModalData={showMoreModalData}
+              setShowMoreModalState={setShowMoreModalState}
+              setSuccessAlert={setSuccessAlert}
+              setFailAlert={setFailAlert}
+              setDetailData={setDetailData}
+              setDetailModalState={setDetailModalState}
+            />
+          }
+          {detailModalState && 
+            <DetailModal
+              event={detailData}
+              setDetailModalState={setDetailModalState}
+              setSuccessAlert={setSuccessAlert}
+              setFailAlert={setFailAlert}
+              setTargetDate={setTargetDate}
+              setEvents={setEvents}
+              setDeleteConfirmModalState={setDeleteConfirmModalState}
+              setDeleteData={setDeleteData}
+              deleteData={deleteData}
+              setCurrentRange={setCurrentRange}
+              calendarRef={calendarRef}
+              setShowMoreModalState={setShowMoreModalState}
+              setOverBookingData={setOverBookingData}
+            />
+          }
+          {createModalState &&
+            <CreateModal
+              setCreateModalState={setCreateModalState}
+              setSuccessAlert={setSuccessAlert}
+              setFailAlert={setFailAlert}
+              setEvents={setEvents}
+              setTargetDate={setTargetDate}
+              calendarRef={calendarRef}
+              setOverBookingData={setOverBookingData}
+            
+            />
+          }
+          {deleteConfirmModalState &&
+            <DeleteConfirmModal
+              calendarRef={calendarRef}
+              setDeleteConfirmModalState={setDeleteConfirmModalState}
+              setDeleteData={setDeleteData}
+              deleteData={deleteData}
+              setSuccessAlert={setSuccessAlert}
+              setFailAlert={setFailAlert}
+              setEvents={setEvents}
+              setTargetDate={setTargetDate}
+              setDetailModalState={setDetailModalState}
+              setShowMoreModalState={setShowMoreModalState}
+              setOverBookingData={setOverBookingData}
+            />
+          }
+          {events &&
+            <Calendar
+              ref={calendarRef}
+              // defaultDate={targetDate}
+              date={targetDate}
+              onNavigate={date => {
+                setTargetDate(date);
+              }}
+              localizer={localizer}
+              events={events}
+              onEventDrop={moveEvent}
+              // onEventResize={resizeEvent}
+              views={['month', 'day']}
+              view={'month'}
+              startAccessor="start"
+              endAccessor="end"
+              style={{ width: '100%', height: '820px' }}
+              dayPropGetter={dayPropGetter}
+              eventPropGetter={eventPropGetter}
+              onShowMore={handleShowMore}
+              onSelectEvent={handleSelectEvent}
+              onRangeChange={handleRangeChange}
+              components={{
+                month: {
+                  header: CustomHeader,
+                  dateHeader: CustomDateHeader
+                }
+              }}
+            />        
+          }
+        </div>
       </div>
     </div>
   );

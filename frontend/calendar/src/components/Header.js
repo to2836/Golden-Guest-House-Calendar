@@ -3,8 +3,10 @@ import { Link, useNavigate, useLocation, NavLink } from 'react-router-dom';
 import LanguageIcon from '@mui/icons-material/Language';
 import { logoutAPI } from '../api/user';
 import { deleteCookie } from '../api/axios';
+import WarningOutlinedIcon from '@mui/icons-material/WarningOutlined';
+import GppBadIcon from '@mui/icons-material/GppBad';
 
-function Header() {
+function Header({overBookingData, setOverBookingSideBarState}) {
   const navigate = useNavigate();
 
   const logout = () => {
@@ -24,6 +26,20 @@ function Header() {
           </div>
         </div>
         <div className="flex">
+          <div className="flex cursor-pointer hover:bg-gray-50 p-2 self-center rounded-md" onClick={() => setOverBookingSideBarState(true)}>
+            <div className="flex mr-5">
+              <GppBadIcon
+                className="text-red-600 self-center"
+              />
+              <p className="text-red-600 self-center font-bold">{overBookingData.over_booking_cnt}</p>
+            </div>
+            <div className="flex">
+              <WarningOutlinedIcon
+                className="text-yellow-500 self-center"
+              />
+              <p className="text-yellow-500 self-center font-bold">{overBookingData.warning_cnt}</p>
+            </div>
+          </div>
           <button
             className="w-[100px] h-[40px] text-[#ed2553] font-bold self-center hover:text-red-300"
             onClick={logout}

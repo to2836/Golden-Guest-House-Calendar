@@ -7,6 +7,8 @@ import MyCalendar from './components/pages/Calendar';
 import Signin from './components/pages/Signin'
 import FailAlert from './components/Alert/FailAlert';
 import SuccessAlert from './components/Alert/SuccessAlert';
+import { overBookingListAPI } from './api/calendar';
+
 
 
 function App() {
@@ -15,6 +17,17 @@ function App() {
   const [successTimeoutID, setSuccessTimeoutID] = useState(null);
   const [failAlert, setFailAlert] = useState({visible:false, msg:'Fail'});
   const [failTimeoutID, setFailTimeoutID] = useState(null);
+  const [overBookingData, setOverBookingData] = useState(false);
+  const [overBookingSideBarState, setOverBookingSideBarState] = useState(false);
+
+  useEffect(() => {
+    overBookingListAPI().then(res => {
+      setOverBookingData(res)
+    }).catch(err => {
+    
+    })
+
+  },[])
 
   useEffect(() => {
     if(successAlert.visible) {
@@ -42,7 +55,7 @@ function App() {
 
   return (
     <Router basename="/">
-        <div className="w-full h-full">
+        <div className=" h-full">
         <Routes>
           <Route
             path={'/signin'}
@@ -56,19 +69,38 @@ function App() {
           <Route
             path={'/calendar'}
             element={
-              <div>
-                <Header/>
-                <MyCalendar
-                  setSuccessAlert={setSuccessAlert}
-                  setFailAlert={setFailAlert}
+              <div className='flex-col h-full'>
+                <Header
+                  overBookingData={overBookingData}
+                  setOverBookingSideBarState={setOverBookingSideBarState}
                 />
+                {/* <div className='flex flex-1 relative h-full'> */}
+                  
+                  
+
+                  <MyCalendar
+                    
+                    setSuccessAlert={setSuccessAlert}
+                    setFailAlert={setFailAlert}
+                    setOverBookingData={setOverBookingData}
+                    overBookingData={overBookingData}
+                    setOverBookingSideBarState={setOverBookingSideBarState}
+                    overBookingSideBarState={overBookingSideBarState}
+                  />
+                  
+
+                {/* </div> */}
+                
+                  
+                
+
+
+             
+                
               </div>
             }
           />
         
-            
-      
-
         </Routes>
         {successAlert.visible &&
           <SuccessAlert

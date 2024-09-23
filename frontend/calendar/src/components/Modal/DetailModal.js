@@ -17,7 +17,7 @@ import Select from 'react-select';
 import Flatpickr from 'react-flatpickr';
 import 'flatpickr/dist/themes/light.css';
 import { Korean } from 'flatpickr/dist/l10n/ko.js';
-import { calendarEventListAPI, calendarEventUpdateAPI, calendarEventCopyCreateAPI } from '../../api/calendar';
+import { calendarEventListAPI, calendarEventUpdateAPI, calendarEventCopyCreateAPI, overBookingListAPI  } from '../../api/calendar';
 
 const roomOptions = [
   {value: 'NAGASAKI', label: '長崎'},
@@ -50,9 +50,10 @@ const statusOptions = [
   {value: 'RESERVED', label: '예약'},
   {value: 'CANCEL', label: '취소'},
   {value: 'NOSHOW', label: '노쇼'},
+  {value: 'MODIFIED', label: '변경'},
 ]
 
-function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert, setShowMoreModalState, setEvents, setDeleteConfirmModalState, setDeleteData, calendarRef }) {
+function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert, setShowMoreModalState, setEvents, setDeleteConfirmModalState, setDeleteData, calendarRef, setOverBookingData }) {
 
   const [editState, setEditState] = useState(false);
   const [status, setStatus] = useState({value: event.status, label: event.status_display_name});
@@ -67,9 +68,9 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
   const [onSitePayment, setOnSitePayment] = useState(event.on_site_payment);
   const [remarks, setRemarks] = useState(event.remarks);
 
-  const [showDeleteOptions, setShowDeleteOptions] = useState(false)
-  const [showCopyEventModal, setShowCopyEventModal] = useState(false)
-  const [copyNum, setCopyNum] = useState(1)
+  const [copyNum, setCopyNum] = useState(1);
+  const [selectMenu, setSelectMenu] = useState(false);
+  const [editBulk, setEditBulk] = useState(false);
 
   const minusCopyNum = () => {
     if (copyNum === 1) {
@@ -144,15 +145,15 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
       case 'KUMAMOTO':
         return '#039BE5' // 파란색
       case 'FUKUOKA':
-        return '#E67C73' // 핑크
+        return '#616161' // 검정
       case 'OOITA':
         return '#F6BF26' // 노란색
       case 'SEOUL':
-        return '#D50000' // 빨간색
+        return '#EF6C00' // 주황색
       case 'KAGOSHIMA':
         return '#D50000' // 빨간색
       case 'MIYAZAKI':
-        return '#D50000' // 빨간색
+        return '#7CB342' // 연두
       default:
         return 'white'
     }
@@ -161,19 +162,19 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
   const getRoomName = (_roomName) => {
     switch (_roomName.value || _roomName) {
       case 'NAGASAKI':
-        return '長崎' // 보라색
+        return '長崎'
       case 'KUMAMOTO':
-        return '熊本' // 파란색
+        return '熊本'
       case 'FUKUOKA':
-        return '福岡' // 핑크
+        return '福岡'
       case 'OOITA':
-        return '大分' // 노란색
+        return '大分'
       case 'SEOUL':
-        return 'ソウル' // 빨간색
+        return 'ソウル'
       case 'KAGOSHIMA':
-        return '鹿児島' // 빨간색
+        return '鹿児島'
       case 'MIYAZAKI':
-        return '宮崎' // 빨간색
+        return '宮崎'
     }
   }
 
@@ -200,6 +201,8 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
         return '[취소]'
       case 'NOSHOW':
         return '[노쇼]'
+      case 'MODIFIED':
+        return '[변경]'
     }
   }
 
@@ -229,9 +232,13 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
       on_site_payment: onSitePayment,
       check_in_status: checkInStatus,
       remarks: remarks,
+      bulk: editBulk,
     }
     calendarEventUpdateAPI(event.id, sendData).then(res => {
       setSuccessAlert({visible: true, msg: '저장 되었습니다.'})
+      overBookingListAPI().then(res => {
+        setOverBookingData(res)
+      })
       calendarEventListAPI(`${checkIn.getFullYear()}-${checkIn.getMonth() + 1}`).then(res => {    
         setEvents(
           res.map(data => {
@@ -240,7 +247,7 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
               ...data,
               start: new Date(data.check_in),
               end: new Date(checkOutDateObj).setDate(checkOutDateObj.getDate() - 1),
-              title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
+              title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':data.status === 'NOSHOW'?'[노쇼]':'변경'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
               color: getRoomColor(data.room_name)
             }
           })
@@ -256,6 +263,9 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
   const handleCopyEvent = () => {
     calendarEventCopyCreateAPI(event.id, {copy_num: copyNum}).then(res => {
       setSuccessAlert({visible: true, msg: '생성 되었습니다.'})
+      overBookingListAPI().then(res => {
+        setOverBookingData(res)
+      })
       calendarEventListAPI(`${checkIn.getFullYear()}-${checkIn.getMonth() + 1}`).then(res => {    
         setEvents(
           res.map(data => {
@@ -264,7 +274,7 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
               ...data,
               start: new Date(data.check_in),
               end: new Date(checkOutDateObj).setDate(checkOutDateObj.getDate() - 1),
-              title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
+              title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':data.status === 'CANCEL'?'[노쇼]':'[변경]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
               color: getRoomColor(data.room_name)
             }
           })
@@ -287,15 +297,31 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
           :
           <div className='flex'>
             <EditNoteOutlinedIcon 
-              className='text-gray-700 mr-11 cursor-pointer hover:text-gray-400'
-              onClick={() => setEditState(true)}
+              className={`${selectMenu === 'EDIT'?'text-gray-400':'text-gray-700'} mr-11 cursor-pointer hover:text-gray-400`}
+              onClick={() => selectMenu === 'EDIT' ? setSelectMenu(false) : setSelectMenu('EDIT')}
             />
+            {selectMenu === 'EDIT' &&
+                <div className='delete-options absolute flex-col w-[200px] z-[400] border border-gray-100 border-solid rounded-md right-[140px] mt-[30px] bg-white shadow-md p-5'>
+                  <p
+                    onClick={() => {setEditState(true); setEditBulk(false);}}
+                    className='text-center text-[14px] mb-3 text-gray-700 font-medium hover:text-gray-400 cursor-pointer'
+                  >
+                    해당 이벤트만 수정
+                  </p>
+                  <p
+                   onClick={() => {setEditState(true); setEditBulk(true);}}
+                    className='text-center text-[14px] text-gray-700 font-medium hover:text-gray-400 cursor-pointer'
+                  >
+                    동일 Booking ID 모두 수정
+                  </p>
+                </div>
+              }
             <GroupAddOutlinedIcon 
-              className={`text-gray-700 mr-11 cursor-pointer ${showCopyEventModal?'text-gray-400':'text-gray-700'}`}
-              onClick={() => setShowCopyEventModal(!showCopyEventModal)}
+              className={`text-gray-700 mr-11 cursor-pointer ${selectMenu === 'COPY'?'text-gray-400':'text-gray-700'}`}
+              onClick={() => selectMenu === 'COPY' ? setSelectMenu(false) : setSelectMenu('COPY')}
             />
-            {showCopyEventModal && 
-            <div className='delete-options absolute flex-col justify-between w-[200px] z-[400] border border-gray-100 border-solid rounded-md right-[80px] mt-[30px] bg-white shadow-md p-5'>
+            {selectMenu === 'COPY' && 
+            <div className='delete-options absolute flex-col justify-between w-[200px] z-[400] border border-gray-100 border-solid rounded-md right-[75px] mt-[25px] bg-white shadow-md p-5'>
               
               <div className='flex justify-between'>
                 <RemoveCircleOutlineOutlinedIcon
@@ -318,19 +344,19 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
             }
             <div className='flex-col'>
               <DeleteOutlineOutlinedIcon
-                className={` cursor-pointer hover:text-gray-400 ${showDeleteOptions?'text-gray-400':'text-gray-700'} delete-options`}
-                onClick={() => setShowDeleteOptions(!showDeleteOptions)}
+                className={` cursor-pointer hover:text-gray-400 ${selectMenu === 'DELETE'?'text-gray-400':'text-gray-700'} delete-options`}
+                onClick={() => selectMenu === 'DELETE' ? setSelectMenu(false) : setSelectMenu('DELETE')}
               />
-              {showDeleteOptions &&
+              {selectMenu === 'DELETE' &&
                 <div className='delete-options absolute flex-col w-[200px] z-[400] border border-gray-100 border-solid rounded-md right-[20px] mt-[5px] bg-white shadow-md p-5'>
                   <p
-                    onClick={() => {setShowDeleteOptions(false); setDeleteConfirmModalState(true); setDeleteData({pk: event.id, bulk: false, checkIn: new Date(event.check_in)})}}
+                    onClick={() => {setDeleteConfirmModalState(true); setDeleteData({pk: event.id, bulk: false, checkIn: new Date(event.check_in)})}}
                     className='text-center text-[14px] mb-3 text-gray-700 font-medium hover:text-gray-400 cursor-pointer'
                   >
                     해당 이벤트만 삭제
                   </p>
                   <p
-                   onClick={() => {setShowDeleteOptions(false); setDeleteConfirmModalState(true); setDeleteData({pk: event.id, bulk: true, checkIn: new Date(event.check_in)})}}
+                   onClick={() => {setDeleteConfirmModalState(true); setDeleteData({pk: event.id, bulk: true, checkIn: new Date(event.check_in)})}}
                     className='text-center text-[14px] text-gray-700 font-medium hover:text-gray-400 cursor-pointer'
                   >
                     동일 Booking ID 모두 삭제
@@ -474,7 +500,7 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
           <>
             <div className='flex mb-4'>
               <p className='w-[120px] text-[#4b5563] font-semibold content-center'>상태</p>
-              <p className='text-[#4b5563]'>{event.status === 'RESERVED' ? '예약' : event.status === 'CANCEL' ? '취소' : '노쇼'}</p>
+              <p className='text-[#4b5563]'>{event.status === 'RESERVED' ? '예약' : event.status === 'CANCEL' ? '취소' : event.status === 'NOSHOW' ? '노쇼': '변경'}</p>
             </div>
             <div className='flex mb-4'>
               <p className='w-[120px] text-[#4b5563] font-semibold content-center'>예약자명</p>
@@ -531,7 +557,7 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
             className='w-[80px] h-[40px] text-white text-[14px] font-[900] bg-[#0064FF] rounded-md hover:bg-blue-500'
             onClick={save}
           >
-            <span className='px-1'>저장</span>
+            <span className='px-1'>수정</span>
           </button>
         </div>
         }

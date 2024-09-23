@@ -31,6 +31,14 @@ export const calendarEventCopyCreateAPI = async (pk, data) => {
     return result;
 }
 
+export const overBookingListAPI = async () => {
+    const url = '/apiv1/calendars/events/over-booking';
+    const result = await getApi(url);
+    return result;
+}
+
+
+
 
 
 

@@ -69,10 +69,31 @@ body {
   color: white;
 }
 
-.event-span-prev {
-  clip-path: polygon(6px 0%, 100% 0%, 100% 100%, 6px 100%, 0 50%);
+.rbc-month-row:nth-of-type(2) > .rbc-row-content > .rbc-row > .rbc-row-segment > .event-span-prev {
+  clip-path: polygon(10px 0%, 100% 0%, 100% 100%, 10px 100%, 0 50%);
 }
 
-.event-span-next {
-  clip-path: polygon(0 0%, 97% 0%, 100% 50%, 97% 100%, 0 100%);
+.rbc-month-row:last-of-type > .rbc-row-content > .rbc-row > .rbc-row-segment > .event-span-next {
+  clip-path: polygon(calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 0% 100%, 0% 0%);
+}
+
+.more-event-span-prev {
+  clip-path: polygon(10px 0%, 100% 0%, 100% 100%, 10px 100%, 0 50%);
+}
+
+.more-event-span-next {
+  clip-path: polygon(calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 0% 100%, 0% 0%);
+}
+
+.more-event-span-both {
+  clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0% 50%);
+}
+
+.rbc-toolbar .rbc-btn-group:nth-of-type(3) {
+  display: none !important;
+}
+
+.rbc-day {
+  background-color: #e3e300;
+  /* border-radius: ; */
 }

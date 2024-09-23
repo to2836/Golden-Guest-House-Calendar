@@ -8,7 +8,7 @@ import DetailModal from '../../Modal/DetailModal';
 import AddIcon from '@mui/icons-material/Add';
 import CreateModal from '../../Modal/CreateModal';
 import DeleteConfirmModal from '../../Modal/DeleteConfirmModal';
-import { calendarEventListAPI } from '../../../api/calendar';
+import { calendarEventListAPI, overBookingListAPI } from '../../../api/calendar';
 import dayjs from "dayjs";
 
 // moment.js를 사용한 localizer 설정
@@ -64,12 +64,24 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
   const [currentRange, setCurrentRange] = useState(false);
   const [init, setInit] = useState(false);
   const [deleteData, setDeleteData] = useState(false);
+  const [overBookingData, setOverBookingData] = useState(false);
+
+  useEffect(() => {
+    overBookingListAPI().then(res => {
+      console.log('res', res)
+      setOverBookingData(res)
+    }).catch(err => {
+      console.log(err)
+    })
+
+  },[])
 
   useEffect(() => {
     if (!init && calendarRef.current) {
-      console.log('calendarRef.current', calendarRef.current)
       setInit(true)
       calendarRef.current.handleNavigate('TODAY')
+
+   
     }
   }, [events])
 
@@ -119,8 +131,10 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
       }
     }
     // 오른쪽 : event-span-next
-    
+    // rbc-event event-span-next rbc-event-allday rbc-event-continues-after
+    // rbc-event event-span-next rbc-event-allday rbc-event-continues-prior rbc-event-continues-after
     const eventEndDate = new Date(moment(end).year(), moment(end).month(), moment(end).date())
+    // console.log('_event', _event)
     if (targetEndDate < eventEndDate) { // 끝 달 < 현재 달
       if (currentRangeEndDate.getDate() === targetEndDate.getDate()) {
         className += 'event-span-next'
@@ -129,6 +143,7 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
       }
     }
 
+    
     // 특정 이벤트의 배경색을 지정하는 로직
     let backgroundColor = _event.color || '#8E24AA'; // 기본 색상
 
@@ -140,7 +155,7 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
 
     return {
       className,
-      style: { backgroundColor },
+      style: { backgroundColor, paddingLeft: 10, paddingRight: 10 },
     };
   };
 
@@ -156,34 +171,59 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
   //   }
   // };
 
-  const handleShowMore = (_events) => {
+  const handleShowMore = (_events, date) => {
     setShowMoreModalState(true)
-    setShowMoreModalData(_events)
+    setShowMoreModalData({events: _events, date: date})
   }
   
   const handleSelectEvent = (_event) => {
-    console.log(_event)
+    // console.log(_event)
     setDetailModalState(true)
     setDetailData(_event)
   }
   
   const CustomDateHeader = (props) => {
-    const isWeekend = props.date.getDay() === 0 || props.date.getDay() === 6; // 주말인지 확인
+    if (!overBookingData){
+      return (
+        <div style={{ color: '#3C4043', fontSize: 12 }}>
+          {props.label}
+        </div>
+      );
+    }
+   
+    let findData = overBookingData.find(data => new Date(data.date).getFullYear() === props.date.getFullYear() && new Date(data.date).getMonth() === props.date.getMonth() && new Date(data.date).getDate() === props.date.getDate())
+    if (findData){
+      let style = ''
+      if (findData.type === 'WARNING') {
+        style = {fontSize: 12, fontWeight: 800, width: 20, height: 'auto', border: '1px solid gray', backgroundColor: 'yellow', borderRadius: '100%', color: '#3C4043', textAlign: 'center', float: 'right'}
+
+      } else if (findData.type === 'OVER_BOOKING') {
+        style = {fontSize: 12, fontWeight: 800, width: 20, height: 'auto', border: '1px solid gray', backgroundColor: 'red', borderRadius: '100%', color: 'white', textAlign: 'center', float: 'right'}
+      }
+      return (
+        <div>  
+          <div style={style}>{props.label}</div>
+        </div>
+      );
+    }  
+  
     return (
-      <div style={{ color: '#3C4043', fontSize: 12 }}>
+      <div style={{ color: '#3C4043', fontSize: 12, fontWeight: 800, backgroundColor: ''  }}>
         {props.label}
       </div>
     );
   };
+
   const CustomHeader = (props) => {
     return (
-      <div style={{ color: '#70757a', fontWeight: 400, fontSize: 12 }}>
+      <div style={{ color: '#70757a', fontWeight: 400, fontSize: 12, fontWeight: 800 }}>
         {props.label}
       </div>
     );
   };
 
   const handleRangeChange = (range) => {
+    if (!Array.isArray(range)) {
     setCurrentRange(range)
     let date;
     if (range.start.getDate() === 1) {
@@ -208,13 +248,14 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
           return {
             ...data,
             start: new Date(data.check_in),
-            end: new Date(checkOutDateObj).setDate(checkOutDateObj.getDate() - 1),
+            end: new Date(new Date(checkOutDateObj).setDate(checkOutDateObj.getDate() - 1)),
             title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
             color: getRoomColor(data.room_name)
           }
         })
       )
     })
+  }
   }
 
 
@@ -232,10 +273,12 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
       <div className='px-[50px]'>
         {showMoreModalState &&
           <ShowMoreModal
-            events={showMoreModalData}
+            showMoreModalData={showMoreModalData}
             setShowMoreModalState={setShowMoreModalState}
             setSuccessAlert={setSuccessAlert}
             setFailAlert={setFailAlert}
+            setDetailData={setDetailData}
+            setDetailModalState={setDetailModalState}
           />
         }
         {detailModalState && 
@@ -249,6 +292,9 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
           setDeleteConfirmModalState={setDeleteConfirmModalState}
           setDeleteData={setDeleteData}
           deleteData={deleteData}
+          setCurrentRange={setCurrentRange}
+          calendarRef={calendarRef}
+          setShowMoreModalState={setShowMoreModalState}
           />
         }
         {createModalState &&
@@ -264,6 +310,7 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
         }
         {deleteConfirmModalState &&
           <DeleteConfirmModal
+            calendarRef={calendarRef}
             setDeleteConfirmModalState={setDeleteConfirmModalState}
             setDeleteData={setDeleteData}
             deleteData={deleteData}
@@ -272,6 +319,7 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
             setEvents={setEvents}
             setTargetDate={setTargetDate}
             setDetailModalState={setDetailModalState}
+            setShowMoreModalState={setShowMoreModalState}
           />
         }
         {events &&
@@ -286,10 +334,11 @@ const MyCalendar = ({setSuccessAlert, setFailAlert}) => {
           events={events}
           onEventDrop={moveEvent}
           // onEventResize={resizeEvent}
-          views={['month']}
+          views={['month', 'day']}
+          view={'month'}
           startAccessor="start"
           endAccessor="end"
-          style={{ width: '100%', height: '800px' }}
+          style={{ width: '100%', height: '820px' }}
           dayPropGetter={dayPropGetter}
           eventPropGetter={eventPropGetter}
           onShowMore={handleShowMore}

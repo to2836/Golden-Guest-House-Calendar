@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 
@@ -109,7 +109,7 @@ class CalendarEventUpdateDeleteView(APIView):
         return Response(status=200)
 
 
-class CalendarEventUCopyCreateView(APIView):
+class CalendarEventCopyCreateView(APIView):
     permission_classes = (IsAuthenticated, )
     parser_classes = (JSONParser, )
 
@@ -129,3 +129,38 @@ class CalendarEventUCopyCreateView(APIView):
         
         serializer.save()
         return Response(status=200)
+
+import pytz
+class OverBookingListView(APIView):
+    permission_classes = (IsAuthenticated, )
+    parser_classes = (JSONParser, )
+
+    def get(self, request):
+        kst = pytz.timezone('Asia/Seoul')
+        today = datetime.now(kst).date()
+
+        latest_date = Event.objects.order_by('-check_out').first().check_out
+
+        date_list = []
+        # 두 날짜 사이의 차이 계산
+        delta = (latest_date - today).days
+        
+        # 날짜 리스트에 모든 날짜 추가
+        for i in range(delta):  # +1은 끝날짜 포함을 위함
+            day = today + timedelta(days=i)
+            count = Event.objects.filter(check_in__lte=day, check_out__gt=day).count()
+            if count >= 27:
+                date_list.append({
+                    'count': count,
+                    'type': 'WARNING' if (27 <= count and count <= 29) else 'OVER_BOOKING',
+                    'date': day
+                })
+        
+        return Response(date_list, status=200)
+
+        
+
+        
+       
+        
+        # Event.objects.filter(check_in__lte=date, check_out__gt=date).count()

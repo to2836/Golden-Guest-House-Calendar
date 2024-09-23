@@ -4,7 +4,7 @@ import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import ErrorOutlinedIcon from '@mui/icons-material/ErrorOutlined';
 import { calendarEventListAPI, calendarEventDeleteAPI } from '../../api/calendar';
  
-const DeleteConfirmModal = ({ setDeleteConfirmModalState, setDetailModalState, setDeleteData, deleteData, setSuccessAlert, setFailAlert, setTargetDate, deleteCheckIn, setEvents }) => {
+const DeleteConfirmModal = ({ setDeleteConfirmModalState, setDetailModalState, setShowMoreModalState, deleteData, setSuccessAlert, setFailAlert, setEvents, calendarRef }) => {
   
   function getAgentContraction(_agent) {
     switch(_agent) {
@@ -54,7 +54,6 @@ const DeleteConfirmModal = ({ setDeleteConfirmModalState, setDetailModalState, s
 
   const handleDelete = () => {
     calendarEventDeleteAPI(deleteData.pk, deleteData).then(res => {
-      console.log(res)
       setSuccessAlert({visible: true, msg: '삭제 되었습니다.'})
       calendarEventListAPI(`${deleteData.checkIn.getFullYear()}-${deleteData.checkIn.getMonth() + 1}`).then(res => {    
         setEvents(
@@ -64,13 +63,15 @@ const DeleteConfirmModal = ({ setDeleteConfirmModalState, setDetailModalState, s
               ...data,
               start: new Date(data.check_in),
               end: new Date(checkOutDateObj).setDate(checkOutDateObj.getDate() - 1),
-              title: `${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
+              title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
               color: getRoomColor(data.room_name)
             }
           })
         )
+        calendarRef.current.handleNavigate('', new Date(deleteData.checkIn.getFullYear(), deleteData.checkIn.getMonth()))
         setDeleteConfirmModalState(false)
         setDetailModalState(false)
+        setShowMoreModalState(false)
       })
       
     }).catch(err => {

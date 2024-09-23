@@ -153,7 +153,6 @@ function CreateModal(props) {
       props.setSuccessAlert({visible: true, msg: '저장 되었습니다.'})
       calendarEventListAPI(`${checkIn[0].getFullYear()}-${checkIn[0].getMonth() + 1}`).then(res => {    
         console.log('res', res)
-        props.setTargetDate(new Date(checkIn[0].getFullYear(), checkIn[0].getMonth()))
         props.setEvents(
           res.map(data => {
             const checkOutDateObj = new Date(data.check_out)
@@ -161,11 +160,12 @@ function CreateModal(props) {
               ...data,
               start: new Date(data.check_in),
               end: new Date(checkOutDateObj).setDate(checkOutDateObj.getDate() - 1),
-              title: `(${data.agent[0]}) ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
+              title: `${data.check_in_status?'𒊹':''} ${getAgentContraction(data.agent)} ${data.status === 'RESERVED'?'':data.status === 'CANCEL'?'[취소]':'[노쇼]'} ${data.on_site_payment?'(收金)':''} ${getDateDifference(new Date(data.check_in), new Date(data.check_out))}泊 ${data.reservation_name}`,
               color: getRoomColor(data.room_name)
             }
           })
         )
+        props.calendarRef.current.handleNavigate('', new Date(checkIn[0].getFullYear(), checkIn[0].getMonth()))
         props.setCreateModalState(false)
         // check in 달로 이동
         props.calendarRef.current.handleNavigate(null, new Date(checkIn[0].getFullYear(), checkIn[0].getMonth()))

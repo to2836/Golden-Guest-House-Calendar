@@ -52,7 +52,7 @@ const statusOptions = [
   {value: 'NOSHOW', label: '노쇼'},
 ]
 
-function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert, setTargetDate, setEvents, setDeleteConfirmModalState, setDeleteData, deleteData }) {
+function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert, setShowMoreModalState, setEvents, setDeleteConfirmModalState, setDeleteData, calendarRef }) {
 
   const [editState, setEditState] = useState(false);
   const [status, setStatus] = useState({value: event.status, label: event.status_display_name});
@@ -233,7 +233,6 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
     calendarEventUpdateAPI(event.id, sendData).then(res => {
       setSuccessAlert({visible: true, msg: '저장 되었습니다.'})
       calendarEventListAPI(`${checkIn.getFullYear()}-${checkIn.getMonth() + 1}`).then(res => {    
-        setTargetDate(new Date(checkIn.getFullYear(), checkIn.getMonth()))
         setEvents(
           res.map(data => {
             const checkOutDateObj = new Date(data.check_out)
@@ -246,7 +245,9 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
             }
           })
         )
+        calendarRef.current.handleNavigate('', new Date(checkIn.getFullYear(), checkIn.getMonth()))
         setDetailModalState(false)
+        setShowMoreModalState(false)
       })
 
     })
@@ -256,7 +257,6 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
     calendarEventCopyCreateAPI(event.id, {copy_num: copyNum}).then(res => {
       setSuccessAlert({visible: true, msg: '생성 되었습니다.'})
       calendarEventListAPI(`${checkIn.getFullYear()}-${checkIn.getMonth() + 1}`).then(res => {    
-        setTargetDate(new Date(checkIn.getFullYear(), checkIn.getMonth()))
         setEvents(
           res.map(data => {
             const checkOutDateObj = new Date(data.check_out)
@@ -269,7 +269,9 @@ function DetailModal({ event, setDetailModalState, setSuccessAlert, setFailAlert
             }
           })
         )
+        calendarRef.current.handleNavigate('', new Date(checkIn.getFullYear(), checkIn.getMonth()))
         setDetailModalState(false)
+        setShowMoreModalState(false)
       })
     }).catch(err => {
       setFailAlert({visible: true, msg: '에러가 발생했습니다.'})
